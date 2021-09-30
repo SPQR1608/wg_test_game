@@ -15,7 +15,8 @@ public:
 	static const int SIZE = 5;
 	static const int GRID_SIZE = SIZE + 2;
 	static const int ARRAY_SIZE = SIZE * SIZE;
-	static const int BLOCK_WIDTH = 120;
+	static const int BLOCK_WIDTH = 90;
+	static const int PLAYABLE_ITEMS = 15;
 
 public:
 	GameModel();
@@ -24,6 +25,7 @@ public:
 	void SetMap();
 	void LoadMenu();
 	bool Check();
+	void Shuffle();
 	void Move(const sf::Vector2i& position);
 	void SelectMap(const sf::Vector2i& position);
 	void MouseAction(const sf::Vector2i& position);
@@ -42,12 +44,12 @@ protected:
 	std::unordered_map<std::string, GameItem> grid_item_colors_;
 	bool solved_;
 	EGameStage game_stage_;
-	int selected_map_;	
+	int selected_map_;
 	sprite_vector map_buttons_;
 
 private:
-	sf::Vector2i first_selected_{ 0, 0 };
-	sf::Vector2i second_selected_{ 0,0 };
+	int first_selected_;
+	int second_selected_;
 	sf::Texture texture_;
 	texture_vector items_texture_;
 	texture_vector items_hover_texture_;

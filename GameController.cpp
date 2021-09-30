@@ -35,6 +35,10 @@ void GameController::Run()
 					if (game_->IsSolved()) game_->GetGameStage() = EGameStage::PLAY;
 					game_->Init();
 					break;
+				case sf::Keyboard::F3:
+					game_->Init();
+					game_->Shuffle();
+					break;
 				case sf::Keyboard::M:
 					game_->GetGameStage() = EGameStage::START;
 					game_->Init();

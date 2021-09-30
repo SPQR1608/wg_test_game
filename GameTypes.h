@@ -41,11 +41,13 @@ public:
 	sf::Sprite& GetHoverSprite() { return hover_sprite_; }
 	EColor GetColorId() { return color_id_; }
 	EItemType& GetItemType() { return type_; }
+	sf::Vector2i& GetGridPosition() { return grid_position_; }
 protected:
 	sf::Sprite sprite_;
 	sf::Sprite hover_sprite_;
 	EColor color_id_;
 	EItemType type_;
+	sf::Vector2i grid_position_;
 };
 
 enum class EGameStage

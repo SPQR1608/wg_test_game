@@ -15,8 +15,8 @@ void GameModel::Init()
 	head_.clear();
 	grid_items_.clear();
 
-	first_selected_ = { 0,0 };
-	second_selected_ = { 0,0 };
+	first_selected_ = 0;
+	second_selected_ = 0;
 
 	switch (game_stage_)
 	{
@@ -25,7 +25,7 @@ void GameModel::Init()
 		break;
 	case EGameStage::PLAY:
 		solved_ = false;
-		SetItemColors();		
+		SetItemColors();
 		SetMap();
 		break;
 	}
@@ -33,41 +33,51 @@ void GameModel::Init()
 
 void GameModel::Move(const sf::Vector2i& position)
 {
-	int x = position.x / BLOCK_WIDTH;
-	int y = position.y / BLOCK_WIDTH - 1;
+	//int x = position.x / BLOCK_WIDTH;
+	//int y = position.y / BLOCK_WIDTH;
 
-	if (x == 0 || y == 0) return;
-
-	if (grid_items_[grid_[x][y]].GetItemType() == EItemType::NOT_MOVABLE) return;
-
-	if (grid_items_[grid_[x][y]].GetItemType() != EItemType::EMPTY)
+	int selected_item = 0;
+	for (int i = 1; i < grid_items_.size(); ++i)
 	{
-		first_selected_.x = x;
-		first_selected_.y = y;
-		std::swap(grid_items_[grid_[x][y]].GetSprite(), grid_items_[grid_[x][y]].GetHoverSprite());
+		if (FindCollision(position, grid_items_[i].GetSprite().getPosition(), BLOCK_WIDTH, BLOCK_WIDTH))
+		{
+			selected_item = i;
+		}
+	}
+	
+	if (selected_item == 0) return;
+
+	if (grid_items_[selected_item].GetItemType() == EItemType::NOT_MOVABLE) return;
+
+	if (grid_items_[selected_item].GetItemType() != EItemType::EMPTY)
+	{
+		first_selected_ = selected_item;
+		std::swap(grid_items_[selected_item].GetSprite(), grid_items_[selected_item].GetHoverSprite());
 		return;
 	}
 
-	if (first_selected_.x && first_selected_.y)
+	if (first_selected_)
 	{
-		second_selected_.x = x;
-		second_selected_.y = y;
-		std::swap(grid_items_[grid_[first_selected_.x][first_selected_.y]].GetSprite(), grid_items_[grid_[first_selected_.x][first_selected_.y]].GetHoverSprite());
+		second_selected_ = selected_item;
+		std::swap(grid_items_[first_selected_].GetSprite(), grid_items_[first_selected_].GetHoverSprite());
 	}
-
-	if ((!first_selected_.x && !first_selected_.y) || (!second_selected_.x && !second_selected_.y)) return;
-
-	sf::Vector2i direction_vector = GetDirectionVector<sf::Vector2i>(second_selected_, first_selected_);
+	
+	if (!first_selected_ || !second_selected_) return;
+	
+	sf::Vector2i f_select_xy = { grid_items_[first_selected_].GetGridPosition().x, grid_items_[first_selected_].GetGridPosition().y };
+	sf::Vector2i s_select_xy = { grid_items_[second_selected_].GetGridPosition().x, grid_items_[second_selected_].GetGridPosition().y };
+	sf::Vector2i direction_vector = GetDirectionVector<sf::Vector2i>(s_select_xy, f_select_xy);
 	
 	if (abs(direction_vector.x) == abs(direction_vector.y) || (abs(direction_vector.x) > 1 || abs(direction_vector.y) > 1))
 	{
-		second_selected_.x = second_selected_.y = 0;
+		second_selected_ = 0;
 		return;
 	}
 
-	std::swap(grid_[first_selected_.x][first_selected_.y], grid_[second_selected_.x][second_selected_.y]);
+	std::swap(grid_[f_select_xy.x][f_select_xy.y], grid_[s_select_xy.x][s_select_xy.y]);
+	std::swap(grid_items_[first_selected_].GetGridPosition(), grid_items_[second_selected_].GetGridPosition());
 
-	first_selected_.x = first_selected_.y = second_selected_.x = second_selected_.y = 0;
+	first_selected_ = second_selected_ = 0;
 
 	if (Check()) 
 	{
@@ -78,7 +88,6 @@ void GameModel::Move(const sf::Vector2i& position)
 
 void GameModel::SelectMap(const sf::Vector2i& position)
 {
-
 	int button_width = map_buttons_[0].getTexture()->getSize().x;
 	int button_height = map_buttons_[0].getTexture()->getSize().y;
 
@@ -134,6 +143,42 @@ bool GameModel::Check()
 	return true;
 }
 
+void GameModel::Shuffle()
+{
+	if (grid_items_.empty()) return;
+
+	int shuffled_items[PLAYABLE_ITEMS];
+
+	for (int i = 1, j = 0; i < grid_items_.size(); ++i)
+	{
+		if (grid_items_[i].GetItemType() == EItemType::MOVABLE)
+		{
+			shuffled_items[j] = i;
+			++j;
+		}
+	}
+
+	int random_arr[PLAYABLE_ITEMS];
+	GetRandomNum(random_arr, PLAYABLE_ITEMS);
+	
+	sf::Vector2i gr_xy;
+	for (int i = 0; i < PLAYABLE_ITEMS; ++i)
+	{
+		gr_xy = grid_items_[shuffled_items[i]].GetGridPosition();
+		grid_[gr_xy.x][gr_xy.y] = shuffled_items[random_arr[i]];
+	}
+
+	for (int i = 0; i < SIZE; ++i)
+	{
+		for (int j = 0; j < SIZE; ++j)
+		{
+			grid_items_[grid_[i + 1][j + 1]].GetGridPosition() = { i + 1, j + 1 };
+		}
+	}
+
+	ShuffleSTL<items_vector>(head_);
+}
+
 void GameModel::SetItemColors()
 {
 	if (!grid_item_colors_.empty()) return;
@@ -161,7 +206,7 @@ void GameModel::SetItemColors()
 		{"Yellow", GameItem(YellowSprite, YellowSpriteHover, EColor::YELLOW, EItemType::MOVABLE)},
 		{"Blue", GameItem(BlueSprite, BlueSpriteHover, EColor::BLUE, EItemType::MOVABLE)},
 		{"Red", GameItem(RedSprite, EColor::RED, EItemType::NOT_MOVABLE)},
-		{"White", GameItem(EColor::WHITE, EItemType::EMPTY)},
+		{"White", GameItem(sf::Sprite(), EColor::WHITE, EItemType::EMPTY)},
 	};
 }
 
@@ -230,6 +275,7 @@ void GameModel::SetMap()
 				if (gItem != grid_item_colors_.end())
 				{
 					grid_items_.push_back(gItem->second);
+					grid_items_[gridIterator].GetGridPosition() = { grid_j, grid_i };
 				}
 			}
 			grid_[grid_j][grid_i] = gridIterator;

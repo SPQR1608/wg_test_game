@@ -1,4 +1,8 @@
 #pragma once
+#include <random>
+#include <random>
+#include <algorithm>
+#include <ctime>
 
 template<class T>
 T GetDirectionVector(const T& begin, const T& end)
@@ -6,15 +10,16 @@ T GetDirectionVector(const T& begin, const T& end)
 	return T{ begin.x - end.x, end.y - begin.y };
 }
 
-void GetRandomNum(int randNums[], int size)
+void GetRandomNum(int randNums[], int until, int from = 0)
 {
-    for (int i = 0; i < size; i++)
+    //srand(time(NULL));
+    for (int i = 0; i < until; i++)
     {
         bool same;
         do
         {
             same = false;
-            randNums[i] = rand() % size + 1;
+            randNums[i] = rand() % until + from;
             for (int check = 0; check < i; check++)
             {
                 if (randNums[i] == randNums[check])
@@ -25,4 +30,13 @@ void GetRandomNum(int randNums[], int size)
             }
         } while (same);
     }
+}
+
+template<class T>
+void ShuffleSTL(T& arr)
+{
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    std::shuffle(arr.begin(), arr.end(), g);
 }
