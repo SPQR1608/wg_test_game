@@ -17,6 +17,8 @@ public:
 	static const int ARRAY_SIZE = SIZE * SIZE;
 	static const int BLOCK_WIDTH = 90;
 	static const int PLAYABLE_ITEMS = 15;
+	static const int ITEMS_IN_GRID = 26;
+	static const int ITEMS_IN_HEAD = 3;
 
 public:
 	GameModel();
@@ -29,19 +31,29 @@ public:
 	void Move(const sf::Vector2i& position);
 	void SelectMap(const sf::Vector2i& position);
 	void MouseAction(const sf::Vector2i& position);
-	bool FindCollision(const sf::Vector2i& first, const sf::Vector2f& second, const int width, const int height);
-	bool IsSolved() { return solved_; }
-	const items_vector& GetHead() { return head_; }
+	bool FindCollision(const sf::Vector2i& first, const sf::Vector2f& second, const int width, const int height) const;
+
+	bool IsSolved() const { return solved_; }
+
+	items_vector& GetHead() { return head_; }
+	const items_vector& GetHead() const { return head_; }
+
 	items_vector& GetGridItems() { return grid_items_; }
-	int (*GetGrid())[GRID_SIZE] { return grid_; }
+	const items_vector& GetGridItems() const { return grid_items_; }
+
+	const int (*GetGrid() const)[GRID_SIZE] { return grid_; }
+
 	EGameStage& GetGameStage() { return game_stage_; }
+	const EGameStage& GetGameStage() const { return game_stage_; }
+
 	sprite_vector& GetMapButtons() { return map_buttons_; }	
+	const sprite_vector& GetMapButtons() const { return map_buttons_; }
 	
 protected:
 	items_vector head_;
 	items_vector grid_items_;
-	int grid_[GRID_SIZE][GRID_SIZE];
 	std::unordered_map<std::string, GameItem> grid_item_colors_;
+	int grid_[GRID_SIZE][GRID_SIZE];
 	bool solved_;
 	EGameStage game_stage_;
 	int selected_map_;

@@ -3,9 +3,9 @@
 #include <tinyxml.h>
 
 GameModel::GameModel()
+	: game_stage_(EGameStage::START)
+	, selected_map_(0)
 {
-	game_stage_ = EGameStage::START;
-	selected_map_ = 0;
 	LoadMaps();
 	Init();
 }
@@ -116,7 +116,7 @@ void GameModel::MouseAction(const sf::Vector2i& position)
 	}
 }
 
-bool GameModel::FindCollision(const sf::Vector2i& first, const sf::Vector2f& second, const int width, const int height)
+bool GameModel::FindCollision(const sf::Vector2i& first, const sf::Vector2f& second, const int width, const int height) const
 {
 	return (first.x > second.x && first.x < second.x + width) &&
 		(first.y > second.y && first.y < second.y + height);
@@ -125,10 +125,10 @@ bool GameModel::FindCollision(const sf::Vector2i& first, const sf::Vector2f& sec
 bool GameModel::Check()
 {
 	int headIterator = 0, winIterator = 0;
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < SIZE; ++i)
 	{
 		if (i & 1) continue;
-		for (int j = 0; j < 5; ++j)
+		for (int j = 0; j < SIZE; ++j)
 		{
 			int n = grid_[i + 1][j + 1];
 
@@ -234,13 +234,13 @@ void GameModel::SetMap()
 	TiXmlElement* mapHeadItem = maps_[selected_map_]->FirstChildElement("Head")->FirstChildElement("Item");
 	TiXmlElement* mapGridRow = maps_[selected_map_]->FirstChildElement("Grid")->FirstChildElement("Row");
 
-	head_.reserve(3);
+	head_.reserve(ITEMS_IN_HEAD);
 	while (mapHeadItem)
 	{
 		std::string itemColor = mapHeadItem->FirstChildElement("color")->GetText();
 		if (!itemColor.empty())
 		{
-			auto gItem = grid_item_colors_.find(itemColor);
+			const auto gItem = grid_item_colors_.find(itemColor);
 			if (gItem != grid_item_colors_.end())
 			{
 				head_.push_back(gItem->second);
@@ -250,7 +250,7 @@ void GameModel::SetMap()
 		mapHeadItem = mapHeadItem->NextSiblingElement("Item");
 	}
 
-	grid_items_.reserve(26);
+	grid_items_.reserve(ITEMS_IN_GRID);
 	grid_items_.push_back(GameItem()); // In grid starts at 1, this 0
 
 	grid_[GRID_SIZE - 1][GRID_SIZE - 1] = { 0 };
@@ -271,8 +271,7 @@ void GameModel::SetMap()
 			std::string itemColor = mapGridItem->FirstChildElement("color")->GetText();
 			if (!itemColor.empty())
 			{
-				const auto gItem = grid_item_colors_.find(itemColor);
-				if (gItem != grid_item_colors_.end())
+				if (auto gItem(grid_item_colors_.find(itemColor)); gItem != grid_item_colors_.end())
 				{
 					grid_items_.push_back(gItem->second);
 					grid_items_[gridIterator].GetGridPosition() = { grid_j, grid_i };
@@ -291,12 +290,17 @@ void GameModel::LoadMenu()
 
 	if (maps_.empty()) return;
 
-	for (int i = 0; i < maps_.size(); ++i)
+	size_t maps_count = maps_.size();
+
+	map_buttons_texture_.reserve(maps_count);
+	map_buttons_.reserve(maps_count);
+
+	for (size_t i = 0; i < maps_count; ++i)
 	{
 		map_buttons_texture_.push_back(sf::Texture());
 	}
 
-	for (int i = 0; i < maps_.size(); ++i)
+	for (size_t i = 0; i < maps_count; ++i)
 	{
 		map_buttons_texture_[i].loadFromFile("assets/images/map" + std::to_string(i + 1) + ".png");
 		map_buttons_.push_back(sf::Sprite(map_buttons_texture_[i]));

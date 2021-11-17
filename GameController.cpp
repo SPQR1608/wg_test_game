@@ -1,9 +1,9 @@
 #include "GameController.h"
 
 GameController::GameController(GameModel* game, GameRender* render)
+	: game_(game)
+	, render_(render)
 {
-	game_ = game;
-	render_ = render;
 }
 
 void GameController::Run()

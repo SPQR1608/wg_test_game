@@ -1,8 +1,8 @@
 #include "GameRender.h"
 
 GameRender::GameRender(GameModel* game)
+	: game_(game)
 {
-	game_ = game;
 	Init();
 }
 
@@ -45,8 +45,8 @@ void GameRender::draw(sf::RenderTarget& target, sf::RenderStates states) const
 void GameRender::draw_game(sf::RenderTarget& target, sf::RenderStates& states) const
 {
 	auto& grid_items = game_->GetGridItems();
-	auto* grid = game_->GetGrid();
-	auto head = game_->GetHead();
+	auto& head = game_->GetHead();
+	const auto* grid = game_->GetGrid();
 
 	if (grid_items.empty() || head.empty()) return;
 
@@ -61,7 +61,10 @@ void GameRender::draw_game(sf::RenderTarget& target, sf::RenderStates& states) c
 		for (int j = 0; j < GameModel::SIZE; ++j)
 		{
 			int n = grid[i + 1][j + 1];
-			grid_items[n].GetSprite().setPosition(static_cast<float>(100.0f + (i * GameModel::BLOCK_WIDTH)), static_cast<float>(230.0f + (j * GameModel::BLOCK_WIDTH)));
+			grid_items[n].GetSprite().setPosition(
+				static_cast<float>(100.0f + (i * GameModel::BLOCK_WIDTH)), 
+				static_cast<float>(230.0f + (j * GameModel::BLOCK_WIDTH))
+			);
 			target.draw(grid_items[n].GetSprite(), states);
 		}
 	}

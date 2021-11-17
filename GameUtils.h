@@ -12,7 +12,7 @@ T GetDirectionVector(const T& begin, const T& end)
 
 void GetRandomNum(int randNums[], int until, int from = 0)
 {
-    srand(time(NULL));
+    srand(static_cast<unsigned>(time(NULL)));
     for (int i = 0; i < until; i++)
     {
         bool same;
